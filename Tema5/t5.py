@@ -81,6 +81,20 @@ def is_symmetric(A):
     A = np.array(A)  # convertim lista in ndarray
     return np.allclose(A, A.T)
 
+def SVD(A):
+    A = np.array(A)
+    U, s, Vt = np.linalg.svd(A)
+    rang = np.linalg.matrix_rank(A)
+    nr_cond = np.linalg.cond(A)
+
+    return s, rang,nr_cond
+
+def calculate_x_I(A, b, I):
+    x_I = np.linalg.matrix_power(A, I).dot(b)
+    x = np.linalg.solve(A, b)
+    norm = np.linalg.norm(b - A.dot(x))
+    return x_I, x, norm
+
 A, l2a = read_a("m_rar_sim_2023_512.txt")
 print(A)
 print(l2a)
@@ -111,3 +125,38 @@ print(lambda_max_A,"\n",v_A)
 print(lambda_max_B,"\n",v_B)
 print(lambda_max_C,"\n",v_C)
 print(lambda_max_D,"\n",v_D)
+
+print("A: ", SVD(A))
+print("Pseudoinversa A:",np.linalg.pinv(A))
+print("B: ", SVD(B))
+print("Pseudoinversa B:",np.linalg.pinv(B))
+print("C: ", SVD(C))
+print("Pseudoinversa C:",np.linalg.pinv(C))
+print("D: ", SVD(D))
+print("Pseudoinversa D:",np.linalg.pinv(D))
+
+b = np.random.rand(A.shape[1])
+I = 2
+x_I, x, norm = calculate_x_I(A, b, I)
+print("x^I =", x_I)
+print("Solutia sistemului Ax = b:", x)
+print("Norma ||b - Ax||2:", norm)
+
+b = np.random.rand(B.shape[1])
+x_I, x, norm = calculate_x_I(B, b, I)
+print("x^I =", x_I)
+print("Solutia sistemului Bx = b:", x)
+print("Norma ||b - Bx||2:", norm)
+
+b = np.random.rand(C.shape[1])
+x_I, x, norm = calculate_x_I(C, b, I)
+print("x^I =", x_I)
+print("Solutia sistemului Cx = b:", x)
+print("Norma ||b - Cx||2:", norm)
+
+D = np.array(D)
+b = np.random.rand(D.shape[1])
+x_I, x, norm = calculate_x_I(D, b, I)
+print("x^I =", x_I)
+print("Solutia sistemului Dx = b:", x)
+print("Norma ||b - Dx||2:", norm)
