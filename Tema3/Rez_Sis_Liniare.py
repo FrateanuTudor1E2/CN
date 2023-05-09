@@ -83,11 +83,14 @@ A = np.array([[1, 0, 2], [0, 1, 0], [0, 0, 1]])
 s = np.array([1, 2, 3])
 n = A.shape[0]
 
+#ex1
 b = ex1(3, A, s)
 print(b, "\n")
 
+#ex2
 print(qr_householder(A), "\n")
 
+#ex3
 A = A + np.eye(n) * 1e-6
 x_qr = solve_qr(A, b)
 x_householder = solve_householder(A, b)
@@ -95,6 +98,7 @@ print(x_qr, "\n", x_householder)
 norm_diff = np.linalg.norm(x_qr - x_householder, ord=2)
 print("Norma diferenței între soluțiile xQR și xHouseholder:", norm_diff, "\n")
 
+#ex4
 error = np.linalg.norm(np.dot(A,x_householder) - b, ord=2)
 print("4.1: ", error, '\n')
 error = np.linalg.norm(np.dot(A,x_qr) - b, ord=2)
@@ -107,6 +111,7 @@ norm_diff_xqr_s = np.linalg.norm(x_qr - s, ord=2)
 error = norm_diff_xqr_s / norm_s
 print("4.4: ", error, '\n')
 
+#ex5
 Q, R = qr_householder(A)
 R_inv = np.linalg.inv(R)
 A_inv_householder = np.dot (R_inv, Q.T)

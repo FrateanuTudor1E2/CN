@@ -1,85 +1,113 @@
+import numpy as np
 import random
+def read_a(file):
+    f = open(file, "r")
+    text = f.read()
+    ec = text.split("\n")
 
-def generate_sparse_symmetric_matrix_dict(n, p):
-    """
-    Functia genereaza o matrice rara si simetrica sub forma de dictionar, cu dimensiunile n x n si p elemente nenule
-    """
-    # initializam dictionarul
-    matrix_dict = {}
-    # generam p elemente nenule si le punem in dictionar
-    for _ in range(p):
-        # generam o pozitie aleatorie in jumatatea triunghiulara superioara
-        i = random.randint(0, n-1)
-        j = random.randint(i, n-1)
-        # generam valoarea pentru aceasta pozitie
-        val = random.randint(1, 10)
-        # punem valoarea in dictionar pe pozitia (i,j)
-        if i not in matrix_dict:
-            matrix_dict[i] = {}
-        matrix_dict[i][j] = val
-    # completam si jumatatea triunghiulara inferioara
+    l2=[]
+
+    n = int(ec[0])
+
+    for i in range(1, len(ec)):
+        ec[i] = ec[i].replace(' ', '')
+        l = ec[i].split(',')
+        l2.append((float(l[0]), int(l[1]), int(l[2])))
+
+    l2.sort(key = lambda x: x[1])
+
+    # initializam matricea A cu zero-uri
+    A = np.zeros((n, n))
+
+    for val, row, col in l2:
+        # adaugam valoarea la pozitia corespunzatoare in matricea A
+        A[row, col] = val
+
+    return A, l2
+
+def generate_sparse_symmetric_matrix(n):
+    A = [[0 for i in range(n)] for j in range(n)]
+    indices = []
+    values = []
+
+    # generate k random indices and values
+    k = random.randint(n, n*(n-1)//2)
+    for i in range(k):
+        row = random.randint(0, n-1)
+        col_range = range(row + 1, n)
+        if col_range:
+            col = random.choice(col_range)
+        else:
+            col = row
+        indices.append((row, col))
+        value = random.uniform(0.1, 1.0)
+        values.append(value)
+        A[row][col] = value
+        A[col][row] = value
+
+    # assign values on diagonal
     for i in range(n):
-        for j in range(i):
-            if j in matrix_dict and i in matrix_dict[j]:
-                # elementul a fost deja generat si pus in dictionar
-                continue
-            elif i in matrix_dict and j in matrix_dict[i]:
-                # elementul a fost deja generat si pus in dictionar
-                continue
-            else:
-                # generam o valoare aleatoare si o punem in dictionar pe pozitia (i,j) si (j,i)
-                val = random.randint(1, 10)
-                if i not in matrix_dict:
-                    matrix_dict[i] = {}
-                if j not in matrix_dict:
-                    matrix_dict[j] = {}
-                matrix_dict[i][j] = val
-                matrix_dict[j][i] = val
-    return matrix_dict
+        if A[i][i] == 0:
+            value = random.uniform(0.1, 1.0)
+            values.append(value)
+            A[i][i] = value
 
-def read_sparse_matrix(file_path):
-    """
-    Functie care citeste matricea dimensiunea si matricea rara din fisier si o stocheaza intr-un mod eficient ca un dictionar
-    :param file_path:
-    :return: n, A_dict
-    """
-    with open(file_path, 'r') as f:
-        # citirea dimensiunii matricei
-        n = int(f.readline().strip())
+    # create lists for each row
+    rows = []
+    for i in range(n):
+        row = []
+        for j in range(n):
+            if A[i][j] != 0:
+                row.append((j, A[i][j]))
+        rows.append(row)
 
-        if n < 1:
-            raise ValueError("Dimensiunea matricei trebuie sa fie un numar pozitiv nenul.")
+    return A, rows, values
 
-        # initializarea dictionarului pentru valorile nenule
-        A_dict = {}
+def power_method(A, eps):
+    A = np.array(A)  # convertim lista in ndarray
+    n = np.array(A).shape[0]
+    x = np.random.rand(n)
+    x /= np.linalg.norm(x)
+    while True:
+        y = A.dot(x)
+        lambda_max = y.max()
+        y /= lambda_max
+        if np.linalg.norm(x-y) < eps:
+            break
+        x = y
+    return lambda_max, y
 
-        # citirea valorilor nenule si a indicilor de linie si coloana corespunzatori
-        for line in f:
-            data = line.split(',')
-            val = float(data[0])
-            row = int(data[1]) - 1  # modificare: linia curenta se calculeaza de la 0, nu de la 1
-            col = int(data[2]) - 1  # modificare: coloana curenta se calculeaza de la 0, nu de la 1
+def is_symmetric(A):
+    A = np.array(A)  # convertim lista in ndarray
+    return np.allclose(A, A.T)
 
-            if val == 0:
-                raise ValueError("Elementele matricei trebuie sa fie numere pozitive nenule.")
+A, l2a = read_a("m_rar_sim_2023_512.txt")
+print(A)
+print(l2a)
+B, l2b = read_a("m_rar_sim_2023_1024.txt")
+print(B)
+print(l2b)
+C, l2c = read_a("m_rar_sim_2023_2023.txt")
+print(C)
+print(l2c)
+D, rows, values = generate_sparse_symmetric_matrix(512)
+print(D)
+print(rows)
+print(values)
 
-            if row not in A_dict:
-                A_dict[row] = {}
-            A_dict[row][col] = val
+# Verificarea simetriei matricelor citite
+print("A is symmetric:", is_symmetric(A))
+print("B is symmetric:", is_symmetric(B))
+print("C is symmetric:", is_symmetric(C))
+print("D is symmetric:", is_symmetric(D))
 
-        # construirea matricei rare folosind structura dictionarului
-        return n, A_dict
+# Calculul valorilor proprii de modul maxim și a vectorilor proprii asociați pentru matrici
+lambda_max_A, v_A = power_method(A, 1e-6)
+lambda_max_B, v_B = power_method(B, 1e-6)
+lambda_max_C, v_C = power_method(C, 1e-6)
+lambda_max_D, v_D = power_method(D, 1e-6)
 
-
-
-
-
-n=600
-p = n
-A_rand = generate_sparse_symmetric_matrix_dict(n, p)
-#print(A_rand)
-
-# citirea matricilor rare din fisierele date
-n1, A1 = read_sparse_matrix(f"m_rar_sim_2023_512.txt")
-n2, A2 = read_sparse_matrix(f"m_rar_sim_2023_1024.txt")
-n3, A3 = read_sparse_matrix(f"m_rar_sim_2023_2023.txt")
+print(lambda_max_A,"\n",v_A)
+print(lambda_max_B,"\n",v_B)
+print(lambda_max_C,"\n",v_C)
+print(lambda_max_D,"\n",v_D)
